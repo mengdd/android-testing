@@ -1,20 +1,29 @@
 package com.example.android.architecture.blueprints.todoapp.data.source
 
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import com.example.android.architecture.blueprints.todoapp.data.Result
 import com.example.android.architecture.blueprints.todoapp.data.Task
+import kotlinx.coroutines.runBlocking
 
-class FakeTestRepository: TasksRepository {
+class FakeTestRepository : TasksRepository {
+    var tasksServiceData: LinkedHashMap<String, Task> = LinkedHashMap()
+
+    private val observableTasks = MutableLiveData<Result<List<Task>>>()
+
+
+    // Rest of class
     override suspend fun getTasks(forceUpdate: Boolean): Result<List<Task>> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        return Result.Success(tasksServiceData.values.toList())
     }
 
     override suspend fun refreshTasks() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        observableTasks.value = getTasks()
     }
 
     override fun observeTasks(): LiveData<Result<List<Task>>> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        runBlocking { refreshTasks() }
+        return observableTasks
     }
 
     override suspend fun refreshTask(taskId: String) {
@@ -59,5 +68,12 @@ class FakeTestRepository: TasksRepository {
 
     override suspend fun deleteTask(taskId: String) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    fun addTasks(vararg tasks: Task) {
+        for (task in tasks) {
+            tasksServiceData[task.id] = task
+        }
+        runBlocking { refreshTasks() }
     }
 }
